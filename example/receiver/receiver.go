@@ -11,10 +11,12 @@ import (
 
 var (
 	socket string
+	create bool
 )
 
 func init() {
 	flag.StringVar(&socket, "s", "/tmp/sendfd.sock", "socket")
+	flag.BoolVar(&create, "c", false, "create file")
 }
 
 func main() {
@@ -40,16 +42,12 @@ func main() {
 	f := fs[0]
 	defer f.Close()
 
-	for {
-		b := make([]byte, 4096)
-		var n int
-		n, err = f.Read(b)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Printf("%s", b[:n])
+	if create {
+		_, err = io.Copy(f, os.Stdin)
+	} else {
+		_, err = io.Copy(os.Stdout, f)
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
